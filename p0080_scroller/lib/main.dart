@@ -35,7 +35,9 @@ class _FocusListScreenState extends State<FocusListScreen> {
   @override
   void initState() {
     super.initState();
-    _scrollToFocusedItem(isInitial: true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToFocusedItem(isInitial: true);
+    });
   }
 
   @override
@@ -58,27 +60,24 @@ class _FocusListScreenState extends State<FocusListScreen> {
 
   void _stopTimer() {
     _timer?.cancel();
-    setState(() {}); // ボタンの状態を更新するために呼び出す
+    setState(() {});
   }
 
   void _scrollToFocusedItem({bool isInitial = false}) {
     if (_scrollController.hasClients) {
-      final double itemHeight = 48.0; // ListTileの高さ
+      final double itemHeight = 48.0;
       final double focusedOffset = _focusedIndex * itemHeight;
       final double screenHeight = MediaQuery.of(context).size.height;
       final double halfScreenHeight = screenHeight / 2;
 
-      // フォーカスされたアイテムが画面の中央に来るようにスクロール位置を調整
       final double targetOffset =
           focusedOffset - halfScreenHeight + (itemHeight / 2);
 
       if (isInitial) {
-        // 初期表示時はアニメーションなしでジャンプ
         _scrollController.jumpTo(
           targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
         );
       } else {
-        // それ以外はアニメーションでスクロール
         _scrollController.animateTo(
           targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
           duration: const Duration(milliseconds: 300),
@@ -89,15 +88,26 @@ class _FocusListScreenState extends State<FocusListScreen> {
   }
 
   void _onFocusChanged() {
-    // フォーカスが変更されたときに実行したい処理をここに記述
     print('新しいフォーカス: ${foo[_focusedIndex]}');
   }
 
+  // --- 新しく追加されたメソッド ---
+  void _markItem() {
+    setState(() {
+      final currentItem = foo[_focusedIndex];
+      // "*"が既についている場合は、それを削除する。
+      // まだついていなければ、末尾に追加する。
+      if (currentItem.endsWith('*')) {
+        foo[_focusedIndex] = currentItem.substring(0, currentItem.length - 1);
+      } else {
+        foo[_focusedIndex] = '$currentItem*';
+      }
+    });
+  }
+  // ------------------------------
+
   @override
   Widget build(BuildContext context) {
-    final int startIndex = (_focusedIndex - 2).clamp(0, foo.length - 1);
-    final int endIndex = (_focusedIndex + 2).clamp(0, foo.length - 1);
-
     return Column(
       children: [
         Expanded(
@@ -106,13 +116,7 @@ class _FocusListScreenState extends State<FocusListScreen> {
             itemCount: foo.length,
             itemBuilder: (context, index) {
               final isFocused = index == _focusedIndex;
-              final isWithinRange = index >= startIndex && index <= endIndex;
               final hasSeven = foo[index].contains('7');
-
-              // フォーカスされたアイテムとその前後2つのみを表示
-              if (!isWithinRange) {
-                return const SizedBox.shrink();
-              }
 
               return GestureDetector(
                 onTap: () {
@@ -127,7 +131,7 @@ class _FocusListScreenState extends State<FocusListScreen> {
                   color: isFocused
                       ? Colors.blue
                       : hasSeven
-                      ? Colors.red[100] // "7"が含まれる場合の背景色
+                      ? Colors.red[100]
                       : null,
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
@@ -150,6 +154,9 @@ class _FocusListScreenState extends State<FocusListScreen> {
             children: [
               ElevatedButton(onPressed: _startTimer, child: const Text('スタート')),
               ElevatedButton(onPressed: _stopTimer, child: const Text('ストップ')),
+              // --- 新しく追加されたボタン ---
+              ElevatedButton(onPressed: _markItem, child: const Text('マーク')),
+              // --------------------------
             ],
           ),
         ),
