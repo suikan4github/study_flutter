@@ -8,8 +8,6 @@ Widget buildHanziAndPinyin(
   String hanzi = _pinyinOnly,
   String pinyin = "",
 }) {
-  const int flexHanzi = 100;
-  const int flexPinyin = 150;
 
   final double textSize =
       (Theme.of(context).textTheme.bodyLarge!.fontSize ?? 16.0) * 1.4;
