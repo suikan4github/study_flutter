@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 void main() {
   runApp(
+    // SettingsオブジェクトをProviderの管理下に置く。
     ChangeNotifierProvider(
       create: (context) => Settings(),
       child: const MyApp(),
@@ -14,24 +15,24 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
-  @override
   Widget build(BuildContext context) {
+    // ProviderからSettingsオブジェクトを取得
     Settings settings = Provider.of<Settings>(context);
 
-    // Obtain the color scheme from the current wallpaper
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        // ここでカラースキームを決定する。
         ColorScheme lightColorScheme;
         ColorScheme darkColorScheme;
-        // if the dynamic color is available and use preferred,
-        // use it; otherwise, fallback to a default color scheme
+        // システムのダイナミックカラーを取得で来て、かつユーザーがその利用を望んでいるか。
         if (lightDynamic != null &&
             darkDynamic != null &&
             settings.isWallpaperBased) {
+          // 壁紙に基づくカラースキームを利用する。
           lightColorScheme = lightDynamic.harmonized();
           darkColorScheme = darkDynamic.harmonized();
         } else {
+          // アプリ固有のカラースキームを利用する。
           lightColorScheme = ColorScheme.fromSeed(seedColor: Colors.deepPurple);
           darkColorScheme = ColorScheme.fromSeed(
             seedColor: Colors.deepPurple,
@@ -39,6 +40,7 @@ class MyApp extends StatelessWidget {
           );
         }
 
+        // 生成したカラースキームに基づいてアプリを構築する。
         return MaterialApp(
           title: 'Flutter Demo',
           theme: ThemeData(colorScheme: lightColorScheme, useMaterial3: true),
@@ -121,6 +123,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
+// カラースキームをどう生成するか、ユーザーの選択を保持するクラス
+//
+// このクラスはProviderの管理下でアプリ全体で共有される。
 class Settings with ChangeNotifier {
   bool _isWallpaperBased = true;
 
